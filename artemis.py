@@ -55,11 +55,11 @@ def countdown_time(count):
         minutes, seconds = divmod(i, 60)
         if minutes > 59:
             hours, minutes = divmod(minutes, 60)
-            print(f"Waiting for drop 😴 ~~ {'0' if hours < 10 else ''}{hours}:{'0' if minutes < 10 else ''}{minutes}:{'0' if seconds < 10 else ''}{seconds}", end="\r")
+            print(f"Generating Connection & Threads 😴 ~~ {'0' if hours < 10 else ''}{hours}:{'0' if minutes < 10 else ''}{minutes}:{'0' if seconds < 10 else ''}{seconds}", end="\r")
         elif minutes:
-            print(f"Waiting for drop 😫 ~~ {'0' if minutes < 10 else ''}{minutes}:{'0' if seconds < 10 else ''}{seconds}   ", end="\r")
+            print(f"Generating Connection & Threads 😫 ~~ {'0' if minutes < 10 else ''}{minutes}:{'0' if seconds < 10 else ''}{seconds}   ", end="\r")
         else:
-            print(f"Waiting for drop 👀 ~~ {seconds}s   ", end="\r")
+            print(f"Generating Connection & Threads 👀 ~~ {seconds}s   ", end="\r")
 
         time.sleep(1)
 
