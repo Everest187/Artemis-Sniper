@@ -19,6 +19,7 @@
 <br>Extract `Artemis.zip`.
 <br>Put your accounts in `accs.txt`.
 <br>Run `artemis.py`.
+<br>To Update: Run Update.bat (Only on Windows) for linux distros run Update.py
 
 ## **Special Thanks**
 
