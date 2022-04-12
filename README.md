@@ -5,8 +5,6 @@
 **"*Artemis*" is a Minecraft Name Sniper, utilizing Sockets & Threading created using Python.**
 -----
 
-<br>![gif](./Editor_26_.gif)
-
 ## **Features**
 - *Supports All Account Types* (Mojang, Microsoft, and Gift Card accounts.)
 - *Multiple Accounts* (Allows more than one Minecraft account to be used.)
