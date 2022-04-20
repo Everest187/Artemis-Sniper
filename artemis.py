@@ -236,4 +236,4 @@ if __name__ == "__main__":
         success_true(accdata)
 
     finally:
-        input("\n\n\nPress enter to exit...")
+        input("\nPress enter to exit...")
