@@ -24,6 +24,8 @@ except ImportError:
 WEBHOOK_URL = ""
 accdata = []
 output = []
+times = []
+receive = []
 
 def nameChangeAllowed(bearer) -> bool:
     try:
@@ -69,33 +71,24 @@ def isGC(bearer) -> bool:
                        headers={"Authorization": f"Bearer {bearer}"}).status_code == 404
 
 # EP Requests
-def req(acc):
-    # With closes socket connection
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect(('api.minecraftservices.com', 443))
-        context = ssl.create_default_context()
-        ss = context.wrap_socket(
-                s, server_hostname='api.minecraftservices.com')
-        ss.send(bytes(f'{acc["payload"]}\r\n\r\n', 'utf-8'))
-    output.append((ss.recv(423), time.time()))
+def req(acc_payload):
+    """Send Socket Payload"""
+    times.append(time.time())
+    ss.send(acc_payload)
+
+def term_threads() -> None:
+        threads = threading.active_count() - 1
+        while threads:
+            threads = threading.active_count() - 1
+            sleep(0.5)  # Wait until threads terminate
 
 # On Success
 def success_true(token_list):
-    t.join()
-    threads = threading.active_count() - 1
-    while threads:
-        threads = threading.active_count() - 1
-        print(f"Waiting for {threads} thread(s) to finish...")
-        time.sleep(0.5)  # Wait until threads terminate
-    
-    # Sort Times
-    output.sort(key=lambda time: time[1])
     for outs in output:
-        status_code = outs[0].decode("utf-8")[9:12]
-        if status_code.isnumeric() and int(status_code) == 200:
-            print(f"[{Fore.GREEN}{status_code}{Fore.RESET}] ~ {datetime.datetime.utcfromtimestamp(outs[1]).strftime('%S.%f')}")
+        if (status_code := outs["status"]) and int(status_code) == 200:
+            print(f"{datetime.datetime.utcfromtimestamp(outs['times']).strftime('%S.%f')} @ [{Fore.GREEN}{status_code}{Fore.RESET}] ~ {datetime.datetime.utcfromtimestamp(outs['travel']).strftime('%S.%f')}")
             for token in token_list:
-                headers = {"Authorization": f"Bearer {token.get('bearer')}"}
+                headers = {"Authorization": f"Bearer {token['bearer']}"}
                 username = requests.get(
                     "https://api.minecraftservices.com/minecraft/profile",
                     headers=headers,
@@ -128,7 +121,19 @@ def success_true(token_list):
             except requests.exceptions.ConnectionError:
                 print(f"{Fore.YELLOW}Failed to execute webhook{Fore.RESET}")
         else:
-            print(f"[{Fore.RED}{status_code}{Fore.RESET}] ~ {datetime.datetime.utcfromtimestamp(outs[1]).strftime('%S.%f')}")     
+            print(f"{datetime.datetime.utcfromtimestamp(outs['times']).strftime('%S.%f')} @ [{Fore.RED}{status_code}{Fore.RESET}] ~ {datetime.datetime.utcfromtimestamp(outs['travel']).strftime('%S.%f')}")  
+
+def done(byt):
+    term_threads()
+    for sendrg in times:
+        revs = ss.recv(byt).decode('utf-8')[9:12]
+        time_end = time.time()
+        receive.append({"exec": time_end - sendrg, "code": revs})
+    print(receive)
+    ss.close()
+    output.extend([{"status": stats['code'], "times": None, "travel": stats['exec']} for stats in receive])
+    [o.update({'times':tim, 'travel': tim + o['travel']}) or o for o,tim in zip(output, times)]
+    success_true(accdata)
 
 if __name__ == "__main__":
     try:
@@ -141,14 +146,13 @@ if __name__ == "__main__":
 
         # Start main
         print(fade.purplepink(f"""
-##########                #                #########   ######   ########## 
-     # ##  #########   #######  ##########         #     #      #        # 
-     #     #       #    # #             #          # ##########         #  
-    #      #       #    # #            #   ########      #             #   
-   #       #       # ##########     # #           #      #            #    
-  #        #########      #          #            #      #          ##     
- #                        #           #    ########       ####    ##    
-                                                         a r t e m i s"""))
+  ___       _                 _     
+ / _ \     | |               (_)    
+/ /_\ \_ __| |_ ___ _ __ ___  _ ___ 
+|  _  | '__| __/ _ \ '_ ` _ \| / __|
+| | | | |  | ||  __/ | | | | | \__ \\
+\_| |_/_|   \__\___|_| |_| |_|_|___/                           
+                        a r t e m i s"""))
 
         print("Blessed by the Goddess - Artemis\n")
 
@@ -188,7 +192,7 @@ if __name__ == "__main__":
                         # Gc auth
                         print(f"Authenticated {Fore.MAGENTA}{email}{Fore.RESET} ~ [GC]")
                         accdata.append({"reqamount": 2, "bearer": msresp,
-                                        "payload": f"POST /minecraft/profile HTTP/1.1\r\nHost: api.minecraftservices.com\r\nprofileName: {target_name}\r\nAuthorization: Bearer {msresp}"})
+                                        "payload": f"POST /minecraft/profile HTTP/1.1\r\nHost: api.minecraftservices.com\r\nprofileName: {target_name}\r\nAuthorization: Bearer {msresp}".encode()})
                     else:
                         # Microsoft auth
                         if not nameChangeAllowed(msresp):
@@ -196,7 +200,7 @@ if __name__ == "__main__":
                             continue
 
                         accdata.append({"reqamount": 4, "bearer": msresp,
-                                            "payload": f"PUT /minecraft/profile/name/{target_name} HTTP/1.1\r\nHost: api.minecraftservices.com\r\nAuthorization: Bearer {msresp}"})
+                                            "payload": f"PUT /minecraft/profile/name/{target_name} HTTP/1.1\r\nHost: api.minecraftservices.com\r\nAuthorization: Bearer {msresp}".encode()})
                         print(f"Authenticated {Fore.MAGENTA}{email}{Fore.RESET} ~ [MS]")
                 except:
                     # Mojang auth
@@ -210,7 +214,7 @@ if __name__ == "__main__":
                                 continue
 
                             accdata.append({"reqamount": 4, "bearer": auth_result['accessToken'],
-                                                "payload": f"PUT /minecraft/profile/name/{target_name} HTTP/1.1\r\nHost: api.minecraftservices.com\r\nAuthorization: Bearer {auth_result['accessToken']}"})
+                                                "payload": f"PUT /minecraft/profile/name/{target_name} HTTP/1.1\r\nHost: api.minecraftservices.com\r\nAuthorization: Bearer {auth_result['accessToken']}".encode()})
                             print(f"Authenticated {Fore.MAGENTA}{email}{Fore.RESET} ~ [MJ]")
                         else:
                             raise Exception
@@ -221,19 +225,24 @@ if __name__ == "__main__":
             sys.exit(f"{Fore.RED}No accounts valid...{Fore.RESET}")
 
         # Prepare Sleep
-        try:
-            countdown_time((droptime - time.time()) - 8)
-        except ValueError:
-            pass
-
+        # try:
+        #     countdown_time((droptime - time.time()) - 8)
+        # except ValueError:
+        #     pass
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(('api.minecraftservices.com', 443))
+        ss = ssl.create_default_context().wrap_socket(s, server_hostname='api.minecraftservices.com')
         #Generating Threads Before Droptime
+        threads = []
         for acc_data in accdata:
-            threads = [threading.Thread(target=req, args=(acc_data,)) for _ in range(acc_data.get("reqamount"))]
+            threads.extend([threading.Thread(target=req, args=(acc_data['payload'],)) for _ in range(acc_data.get("reqamount"))])
             
-        time.sleep(droptime - time.time())
+        # time.sleep(droptime - time.time())
         for t in threads:
             t.start()
-        success_true(accdata)
+        for t in threads:
+            t.join()
+        done(2046)
 
     finally:
         input("\nPress enter to exit...")
