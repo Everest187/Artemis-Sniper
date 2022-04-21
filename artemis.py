@@ -225,10 +225,10 @@ if __name__ == "__main__":
             sys.exit(f"{Fore.RED}No accounts valid...{Fore.RESET}")
 
         # Prepare Sleep
-        # try:
-        #     countdown_time((droptime - time.time()) - 8)
-        # except ValueError:
-        #     pass
+        try:
+            countdown_time((droptime - time.time()) - 8)
+        except ValueError:
+            pass
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect(('api.minecraftservices.com', 443))
         ss = ssl.create_default_context().wrap_socket(s, server_hostname='api.minecraftservices.com')
@@ -237,7 +237,7 @@ if __name__ == "__main__":
         for acc_data in accdata:
             threads.extend([threading.Thread(target=req, args=(acc_data['payload'],)) for _ in range(acc_data.get("reqamount"))])
             
-        # time.sleep(droptime - time.time())
+        time.sleep(droptime - time.time())
         for t in threads:
             t.start()
         for t in threads:
